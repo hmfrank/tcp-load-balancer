@@ -1,18 +1,31 @@
-# Custom Load Balancing (TCP)
-Dies ist die Lösung einer Programmieraufgabe.
+# TCP Load Balancer
+Simple TCP load balancer (round robin).
 
-## Aufgabe
-Schreibe eine einfache Lösung, wie du TCP Load-Balancing zwischen 4 Servern verteilst.
-Ziel ist es einerseits eine Lösungs-Ansatz zu beschreiben und dann der Code.
+## How to Use
+```shell script
+# start some servers
+$ cargo run --bin server 127.0.0.1:8081 &
+$ cargo run --bin server 127.0.0.1:8082 &
+$ cargo run --bin server 127.0.0.1:8083 &
+$ cargo run --bin server 127.0.0.1:8084 &
 
-## Lösung
-`cargo run` startet den Load-Balancer, der auf 127.0.0.1:8080 auf TCP-Anfragen wartet.
-Er verteilt die Last an 4 lokale Server mit den (hardgecodedten) Ports 8081, 8082, 8083, 8084.
-Die Server müssen separat mit `cargo run --example server 127.0.0.1:8081` (bzw. `...:8082`, usw.) gestartet werden.
-Laufen die Server und der Load-Balancer, kann mit `cargo run --example tester` eine TCP-Verbindung zum Load-Balancer aufgebaut werden,
-welcher dann ausgibt, welcher Client zu welchem Server zugeordnet wird.
-
-Alternativ kann auch jedes beliebige andere Programm verwendet werden, um eine TCP-Verbindung aufzuabuen.
-Bei den Servern handelt es sich um einfache Echo-Server.
-
-Als Load-Balancing-Algorithmus wird hier round robin verwendet.
+# start the load balancer
+$ cargo run --bin load_balancer 127.0.0.1:8080 \
+    127.0.0.1:8081 \
+    127.0.0.1:8082 \
+    127.0.0.1:8083 \
+    127.0.0.1:8084
+```
+To test the load balancer, you have to connect to it with a TCP client.
+```shell script
+$ cargo run --bin client 127.0.0.1:8080
+[C] Connected to 127.0.0.1:8080
+[C] Received 26 bytes: "Hello from 127.0.0.1:8081."
+```
+When the next client connects, we get a response from a different server.
+```shell script
+# if no argument is given, it defaults to 127.0.0.1:8080
+$ cargo run --bin client
+[C] Connected to 127.0.0.1:8080
+[C] Received 26 bytes: "Hello from 127.0.0.1:8082."
+```
