@@ -1,5 +1,5 @@
 [package]
-name = "task3"
+name = "tcp_load_balancer"
 version = "0.1.0"
 edition = "2021"
 
