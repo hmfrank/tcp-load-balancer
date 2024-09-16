@@ -15,13 +15,13 @@ async fn main() -> io::Result<()> {
     };
 
     let mut connection = TcpStream::connect(&addr).await?;
-    println!("Connected to {}", addr);
+    println!("[C] Connected to {}", addr);
 
     let mut buffer = vec![0u8; 4086];
     let n = connection.read(buffer.as_mut_slice()).await?;
 
     let buffer: Vec<u8> = buffer.into_iter().take(n).collect();
-    println!("Received {} bytes: {}",
+    println!("[C] Received {} bytes: {}",
         n,
         match String::from_utf8(buffer) {
             Ok(msg) => format!("\"{}\"", msg),

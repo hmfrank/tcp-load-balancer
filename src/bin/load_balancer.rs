@@ -23,7 +23,7 @@ async fn main() -> io::Result<()> {
     let lb_addr = lb_addr.unwrap();
 
     let listener = TcpListener::bind(&lb_addr).await?;
-    println!("Listening on {}", lb_addr);
+    println!("[L] Listening on {}", lb_addr);
 
     let mut next_server_index = 0;
 
@@ -35,7 +35,7 @@ async fn main() -> io::Result<()> {
 
                 tokio::spawn(async move {
                     if let Err(e) = handle_client(socket, client_address, server_address).await {
-                        println!("Failed to connect client {} to server {}. {:?}",
+                        println!("[L] Failed to connect client {} to server {}. {:?}",
                             client_address,
                             server_address,
                             e
@@ -44,7 +44,7 @@ async fn main() -> io::Result<()> {
                 });
             }
             Err(e) => {
-                println!("Failed to accept client. {:?}", e);
+                println!("[L] Failed to accept client. {:?}", e);
             }
         };
     }
@@ -52,7 +52,7 @@ async fn main() -> io::Result<()> {
 
 async fn handle_client(mut client_socket: TcpStream, client_addr: SocketAddr, server_addr: SocketAddr) -> io::Result<(u64, u64)> {
     let mut server_socket = TcpStream::connect(server_addr).await?;
-    println!("Connected client at {} to server at {}.", client_addr, server_addr);
+    println!("[L] Connected client at {} to server at {}.", client_addr, server_addr);
 
     tokio::io::copy_bidirectional(&mut client_socket, &mut server_socket).await
 }
