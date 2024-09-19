@@ -1,5 +1,5 @@
 # TCP Load Balancer
-Simple TCP load balancer (round robin).
+Simple TCP load balancer (round-robin).
 
 ## How to Use
 ```shell script
