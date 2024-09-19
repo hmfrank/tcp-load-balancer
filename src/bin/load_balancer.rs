@@ -1,7 +1,6 @@
-// TODO: resturcture
 use core::net::SocketAddr;
 use std::{env, io};
-use tokio::net::{TcpListener, TcpStream};
+use tcp_load_balancer::run_load_balancer;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
@@ -23,41 +22,5 @@ async fn main() -> io::Result<()> {
     }
     let lb_addr = lb_addr.unwrap();
 
-    let listener = TcpListener::bind(&lb_addr).await?;
-    println!("[L] Listening on {}", lb_addr);
-
-    let mut next_server_index = 0;
-
-    loop {
-        let (socket, client_address) = match listener.accept().await {
-            Err(e) => {
-                println!("[L] Failed to accept client. {:?}", e);
-                continue;
-            }
-            Ok((s, addr)) => {
-                println!("[L] New connection to {}", addr);
-                (s, addr)
-            }
-        };
-
-        let server_address = server_addrs[next_server_index].clone();
-        next_server_index = (next_server_index + 1) % server_addrs.len();
-
-        tokio::spawn(async move {
-            if let Err(e) = handle_client(socket, client_address, server_address).await {
-                println!("[L] Failed to connect client {} to server {}. {:?}",
-                         client_address,
-                         server_address,
-                         e
-                );
-            }
-        });
-    }
-}
-
-async fn handle_client(mut client_socket: TcpStream, client_addr: SocketAddr, server_addr: SocketAddr) -> io::Result<(u64, u64)> {
-    let mut server_socket = TcpStream::connect(server_addr).await?;
-    println!("[L] Assigned client at {} to server at {}.", client_addr, server_addr);
-
-    tokio::io::copy_bidirectional(&mut client_socket, &mut server_socket).await
+    run_load_balancer(lb_addr, &server_addrs, true).await
 }
