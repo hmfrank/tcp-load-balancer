@@ -1,10 +1,9 @@
 use std::{env, io};
-use tokio::io::AsyncReadExt;
-use tokio::net::{TcpStream};
+use tcp_load_balancer::run_client;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    let addr = {
+    let address = {
         let args: Vec<_> = env::args().collect();
 
         if args.len() < 2 {
@@ -14,20 +13,5 @@ async fn main() -> io::Result<()> {
         }
     };
 
-    let mut connection = TcpStream::connect(&addr).await?;
-    println!("[C] Connected to {}", addr);
-
-    let mut buffer = vec![0u8; 4086];
-    let n = connection.read(buffer.as_mut_slice()).await?;
-
-    let buffer: Vec<u8> = buffer.into_iter().take(n).collect();
-    println!("[C] Received {} bytes: {}",
-        n,
-        match String::from_utf8(buffer) {
-            Ok(msg) => format!("\"{}\"", msg),
-            Err(e) => format!("{:?}", e.into_bytes()),
-        }
-    );
-
-    Ok(())
+    run_client(&address, true).await
 }
