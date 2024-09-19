@@ -1,3 +1,4 @@
+// TODO: resturcture
 use core::net::SocketAddr;
 use std::{env, io};
 use tokio::net::{TcpListener, TcpStream};
@@ -28,31 +29,35 @@ async fn main() -> io::Result<()> {
     let mut next_server_index = 0;
 
     loop {
-        match listener.accept().await {
-            Ok((socket, client_address)) => {
-                let server_address = server_addrs[next_server_index].clone();
-                next_server_index = (next_server_index + 1) % server_addrs.len();
-
-                tokio::spawn(async move {
-                    if let Err(e) = handle_client(socket, client_address, server_address).await {
-                        println!("[L] Failed to connect client {} to server {}. {:?}",
-                            client_address,
-                            server_address,
-                            e
-                        );
-                    }
-                });
-            }
+        let (socket, client_address) = match listener.accept().await {
             Err(e) => {
                 println!("[L] Failed to accept client. {:?}", e);
+                continue;
+            }
+            Ok((s, addr)) => {
+                println!("[L] New connection to {}", addr);
+                (s, addr)
             }
         };
+
+        let server_address = server_addrs[next_server_index].clone();
+        next_server_index = (next_server_index + 1) % server_addrs.len();
+
+        tokio::spawn(async move {
+            if let Err(e) = handle_client(socket, client_address, server_address).await {
+                println!("[L] Failed to connect client {} to server {}. {:?}",
+                         client_address,
+                         server_address,
+                         e
+                );
+            }
+        });
     }
 }
 
 async fn handle_client(mut client_socket: TcpStream, client_addr: SocketAddr, server_addr: SocketAddr) -> io::Result<(u64, u64)> {
     let mut server_socket = TcpStream::connect(server_addr).await?;
-    println!("[L] Connected client at {} to server at {}.", client_addr, server_addr);
+    println!("[L] Assigned client at {} to server at {}.", client_addr, server_addr);
 
     tokio::io::copy_bidirectional(&mut client_socket, &mut server_socket).await
 }

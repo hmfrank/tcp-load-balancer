@@ -20,21 +20,23 @@ async fn main() -> io::Result<()> {
     println!("[S] Listening on {}", addr);
 
     loop {
-        match listener.accept().await {
-            Ok((socket, client_address)) => {
-                println!("[S] New connection to {}", client_address);
-
-                let addr = addr.clone();
-                tokio::spawn(async move {
-                    if let Err(e) = handle_client(socket, &addr).await {
-                        println!("[S] Failed to handle client at {}. {:?}", client_address, e);
-                    }
-                });
-            }
+        let (socket, client_address) = match listener.accept().await {
             Err(e) => {
                 println!("[S] Failed to accept client. {:?}", e);
+                continue;
+            }
+            Ok((s, addr)) => {
+                println!("[S] New connection to {}", addr);
+                (s, addr)
             }
         };
+
+        let addr = addr.clone();
+        tokio::spawn(async move {
+            if let Err(e) = handle_client(socket, &addr).await {
+                println!("[S] Failed to handle client at {}. {:?}", client_address, e);
+            }
+        });
     }
 }
 
